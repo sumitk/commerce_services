@@ -1,0 +1,917 @@
+<?php
+
+/**
+ * @file
+ * Provides integration with Services to create a Drupal Commerce API server.
+ */
+
+/**
+ * Implement hook_ctools_plugin_api().
+ */
+function commerce_services_ctools_plugin_api($module, $api) {
+  if ($module == 'services' && $api == 'services') {
+    return array('version' => 3);
+  }
+}
+
+/**
+ * Implements hook_permission().
+ */
+function commerce_services_permission() {
+  return array(
+    "retrieve customers data" => array(
+      'title' => t("Retrieve Customer's data"),
+    ),
+    // TODO: design all the needed permission set
+    
+  );
+}
+
+/**
+ * Implements hook_services_resources().
+ */
+function commerce_services_services_resources() {
+  return array(
+		'cart' => array(
+      'retrieve' => array(
+        'help' => 'Retrieves a Commerce Cart Order for the specified user.',
+        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/cart_resource'),
+        'access callback' => 'commerce_services_order_access',
+        'access arguments' => array('view'),
+        'access arguments append' => TRUE,
+				'callback' => '_commerce_services_cart_order_retrieve',
+        'args' => array(
+			    array(
+			      'name' => 'uid',
+			      'type' => 'int',
+			      'description' => 'The uid of the user whose order in progress should be returned.',
+			      'source' => array('path' => 0),
+			      'optional' => FALSE,
+			    ),
+			  ),
+      ),
+      'update' => array(
+        'help' => 'Empties the line items from the Commerce Cart Order of the specified user.',
+        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/cart_resource'),
+				'access callback' => 'commerce_services_order_access',
+        'access arguments' => array('update'),
+        'access arguments append' => TRUE,
+        'callback' => '_commerce_services_cart_order_empty',
+				'args' => array(
+			    array(
+			      'name' => 'uid',
+			      'type' => 'int',
+			      'description' => 'The uid of the user whose order in progress should be emptied.',
+			      'source' => array('path' => 0),
+			      'optional' => FALSE,
+			    ),
+			  ),
+      ),
+    ),
+    'customer' => array(
+      //'retrieve' => array(
+      //  'help' => 'Retrieves customer profile data from Drupal Commerce',
+      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/customer_resource'
+      //  ),
+      //  'callback' => '_customer_resource_retrieve',
+      //  'access callback' => '_customer_resource_access',
+      //  'access arguments' => array('view'),
+      //  'access arguments append' => TRUE,
+      //  'args' => array(
+      //    array(
+      //      'name' => 'profile_id',
+      //      'type' => 'int',
+      //      'description' => 'The customer profile Id',
+      //      'source' => array('path' => '0'),
+      //      'optional' => FALSE,
+      //    ),
+      //  ),
+      //),
+      'create' => array(
+        'help' => 'Creates a new customer profile for Drupal Commerce',
+        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/customer_resource'),
+				'access callback' => 'commerce_services_customer_profile_access',
+        'access arguments' => array('create'),
+        'access arguments append' => TRUE,
+        'callback' => '_commerce_services_customer_profile_create',
+				'args' => array(
+			    array(
+			      'name' => 'values',
+			      'type' => 'array',
+			      'description' => 'An array of values to merge into the new customer profile object.',
+			      'source' => 'data',
+			      'optional' => FALSE,
+			    ),
+			  ),
+      ),
+      //'update' => array(
+      //  'help' => 'Updates a customer profile at Drupal Commerce',
+      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/customer_resource'),
+      //  'callback' => '_customer_resource_update',
+      //  'args' => array(
+      //    array(
+      //      'name' => 'profile_id',
+      //      'type' => 'int',
+      //      'description' => 'The customer profile Id to get',
+      //      'source' => array('path' => '0'),
+      //      'optional' => FALSE,
+      //    ),
+      //    array(
+      //      'name' => 'profile',
+      //      'optional' => FALSE,
+      //      'source' => 'data',
+      //      'description' => 'The customer profile data to be updated',
+      //      'type' => 'array',
+      //    ),
+      //  ),
+      //  'access callback' => '_customer_resource_access',
+      //  'access arguments' => array('update'),
+      //  'access arguments append' => TRUE,
+      //),
+    ),
+    'order' => array(
+			'create' => array(
+        'help' => 'Creates a new order for Drupal Commerce',
+        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+				'access callback' => 'commerce_services_order_access',
+        'access arguments' => array('create'),
+        'access arguments append' => TRUE,
+        'callback' => '_commerce_services_order_create',
+        'args' => array(
+          array(
+			      'name' => 'values',
+			      'type' => 'array',
+			      'description' => 'An array of values to merge into the new order object.',
+			      'source' => array('data'=>'values'),
+			      'optional' => TRUE,
+			    ),
+			    array(
+			      'name' => 'line_items',
+			      'type' => 'array',
+			      'description' => 'An array of line item values arrays to cascade line item creation with this order creation.',
+			      'source' => array('data'=>'line_items'),
+			      'optional' => TRUE,
+			    ),
+			    array(
+			      'name' => 'billing',
+			      'type' => 'array',
+			      'description' => 'An array of billing customer profile values arrays to cascade profile creation with this order creation.',
+			      'source' => array('data'=>'billing'),
+			      'optional' => TRUE,
+			    ),
+        ),
+      ),
+      'retrieve' => array(
+        'help' => 'Retrieves an order from Drupal Commerce',
+        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+        'access callback' => 'commerce_services_order_access',
+        'access arguments' => array('view'),
+        'access arguments append' => TRUE,
+				'callback' => '_commerce_services_order_load',
+        'args' => array(
+			    array(
+			      'name' => 'order_id',
+			      'type' => 'int',
+			      'description' => 'The ID of the order to retrieve.',
+			      'source' => array('path' => 0),
+			      'optional' => FALSE,
+			    ),
+			  ),
+      ),
+			'delete' => array(
+        'help' => 'Deletes an order from Drupal Commerce',
+        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+        'access callback' => 'commerce_services_order_access',
+        'access arguments' => array('delete'),
+        'access arguments append' => TRUE,
+				'callback' => '_commerce_services_order_delete',
+        'args' => array(
+			    array(
+			      'name' => 'order_id',
+			      'optional' => FALSE,
+			      'source' => array('path' => 0),
+			      'type' => 'int',
+			      'description' => 'The ID of the order to delete.',
+			    ),
+			  ),
+      ),
+			'index' => array(
+        'help' => 'Indexes an order from Drupal Commerce',
+        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+        'access callback' => 'commerce_services_order_access',
+        'access arguments' => array('view'),
+        'access arguments append' => TRUE,
+				'callback' => '_commerce_services_order_index',
+        'args' => array(
+			    array(
+			      'name' => 'parameters',
+			      'type' => 'array',
+			      'description' => 'Parameters array',
+			      'source' => array('param' => 'parameters'),
+			      'optional' => TRUE,
+			      'default value' => array(),
+			    ),
+			    array(
+			      'name' => 'page',
+			      'type' => 'int',
+			      'description' => 'The zero-based index of the page to get, defaults to 0.',
+			      'source' => array('param' => 'page'),
+			      'optional' => TRUE,
+			      'default value' => 0,
+			    ),
+			  ),
+      ),
+      'update' => array(
+        'help' => 'Updates an order at Drupal Commerce',
+        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+				'access callback' => 'commerce_services_order_access',
+        'access arguments' => array('update'),
+        'access arguments append' => TRUE,
+        'callback' => '_commerce_services_order_save',
+        'args' => array(
+			    array(
+			      'name' => 'order_id',
+			      'type' => 'int',
+			      'description' => 'The ID of the order to update.',
+			      'source' => array('path' => 0),
+			      'optional' => FALSE,
+			    ),
+			    array(
+			      'name' => 'values',
+			      'type' => 'array',
+			      'description' => 'An array of values to merge into the loaded order object.',
+			      'source' => 'data',
+			      'optional' => FALSE,
+			    ),
+			  ),
+      ),
+    ),
+    'payment' => array(
+      //'retrieve' => array(
+      //  'help' => 'Retrieves a payment transaction from Drupal Commerce',
+      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/payment_resource'
+      //  ),
+      //  'callback' => '_payment_resource_retrieve',
+      //  'access callback' => '_payment_resource_access',
+      //  'access arguments' => array('view'),
+      //  'access arguments append' => TRUE,
+      //  'args' => array(
+      //    array(
+      //      'name' => 'transaction_id',
+      //      'type' => 'int',
+      //      'description' => 'The Payment Transaction Id',
+      //      'source' => array('path' => '0'),
+      //      'optional' => FALSE,
+      //    ),
+      //  ),
+      //),
+      'create' => array(
+        'help' => 'Creates a new Payment Transaction for an order in Drupal Commerce',
+        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/payment_resource'),
+				'access callback' => 'commerce_services_payment_transaction_access',
+        'access arguments' => array('create'),
+        'access arguments append' => TRUE,
+        'callback' => '_commerce_services_payment_transaction_create',
+        'args' => array(
+			    array(
+			      'name' => 'values',
+			      'type' => 'array',
+			      'description' => 'An array of values to merge into the new payment transaction object.',
+			      'source' => 'data',
+			      'optional' => FALSE,
+			    ),
+			  ),
+      ),
+      //'update' => array(
+      //  'help' => 'Updates a Payment Transaction for an Order in Drupal Commerce',
+      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/payment_resource'),
+      //  'callback' => '_payment_resource_update',
+      //  'args' => array(
+      //    array(
+      //      'name' => 'transaction_id',
+      //      'type' => 'int',
+      //      'description' => 'The Payment Transaction Id to get',
+      //      'source' => array('path' => '0'),
+      //      'optional' => FALSE,
+      //    ),
+      //    array(
+      //      'name' => 'transaction',
+      //      'optional' => FALSE,
+      //      'source' => 'data',
+      //      'description' => 'The Payment Transaction data to be updated',
+      //      'type' => 'array',
+      //    ),
+      //  ),
+      //  'access callback' => '_payment_resource_access',
+      //  'access arguments' => array('update'),
+      //  'access arguments append' => TRUE,
+      //),
+    ),
+    //'product' => array(
+      //'retrieve' => array(
+      //  'help' => 'Retrieves a product from Drupal Commerce',
+      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/product_resource'
+      //  ),
+      //  'callback' => '_product_resource_retrieve',
+      //  'access callback' => '_product_resource_access',
+      //  'access arguments' => array('view'),
+      //  'access arguments append' => TRUE,
+      //  'args' => array(
+      //    array(
+      //      'name' => 'product_id',
+      //      'type' => 'int',
+      //      'description' => 'The Product Id',
+      //      'source' => array('path' => '0'),
+      //      'optional' => FALSE,
+      //    ),
+      //  ),
+      //),
+      //'create' => array(
+      //  'help' => 'Creates a new product for Drupal Commerce',
+      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/product_resource'),
+      //  'callback' => '_product_resource_create',
+      //  'args' => array(
+      //    array(
+      //      'name' => 'product',
+      //      'optional' => FALSE,
+      //      'source' => 'data',
+      //      'description' => 'The Product data to be created',
+      //      'type' => 'array',
+      //    ),
+      //  ),
+      //  'access callback' => '_product_resource_create',
+      //  'access arguments' => array('create'),
+      //  'access arguments append' => TRUE,
+      //),
+      //'update' => array(
+      //  'help' => 'Updates a Product in Drupal Commerce',
+      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/product_resource'),
+      //  'callback' => '_product_resource_update',
+      //  'args' => array(
+      //    array(
+      //      'name' => 'product_id',
+      //      'type' => 'int',
+      //      'description' => 'The Product Id to get',
+      //      'source' => array('path' => '0'),
+      //      'optional' => FALSE,
+      //    ),
+      //    array(
+      //      'name' => 'product',
+      //      'optional' => FALSE,
+      //      'source' => 'data',
+      //      'description' => 'The product data to be updated',
+      //      'type' => 'array',
+      //    ),
+      //  ),
+      //  'access callback' => '_product_resource_access',
+      //  'access arguments' => array('update'),
+      //  'access arguments append' => TRUE,
+      //),
+    //),
+  );
+}
+
+
+
+/**
+ * Implements hook_commerce_order_state_info().
+ */
+function commerce_services_commerce_order_state_info() {
+  $order_states = array();
+
+  $order_states['in_progress'] = array(
+    'name' => 'in_progress',
+    'title' => t('In progress'),
+    'description' => t('Orders in this state have not been completed by the customer yet.'),
+    'weight' => -5,
+    'default_status' => 'in_progress',
+  );
+
+  return $order_states;
+}
+
+/**
+ * Implements hook_commerce_order_status_info().
+ */
+function commerce_services_commerce_order_status_info() {
+  $order_statuses = array();
+
+  $order_statuses['in_progress'] = array(
+    'name' => 'in_progress',
+    'title' => t('In progress'),
+    'state' => 'in_progress',
+    'cart' => TRUE,
+  );
+
+  return $order_statuses;
+}
+
+/**
+ * Implements hook_commerce_line_item_type_info().
+ */
+function commerce_services_commerce_line_item_type_info() {
+  return array(
+    'remote_product' => array(
+      'type' => 'remote_product',
+      'name' => t('Remote Product'),
+      'description' => t('References a remote product and displays it with the SKU as the label.'),
+      'add_form_submit_value' => t('Add remote product'),
+      'base' => 'commerce_services_remote_product_line_item',
+    ),
+  );
+}
+
+/**
+ * Returns an appropriate title for a remote product line item.
+ */
+function commerce_services_remote_product_line_item_title($line_item) {
+  // Currently, just return the title from the data array.
+  if (!empty($line_item->data['remote_title'])) {
+    return t('[Remote] @title', array('@title' => $line_item->data['remote_title']));
+  }
+  else {
+    return t('[Remote] - No title data -');
+  }
+}
+
+/**
+ * Determines API request access to various order operations.
+ *
+ * @param $op
+ *   The operation to perform: view, update, create, or delete
+ * @param $args
+ *   The arguments array from the API request.
+ *
+ * @return
+ *   TRUE or FALSE indicating access for the current request.
+ */
+function commerce_services_order_access($op, $args) {
+	// For testing
+	return TRUE;
+  // Grant administrators access to do anything. This is the only check required
+  // for now as we're using a single administrative user for API requests.
+  //if (user_access('administer orders')) {
+  //  return TRUE;
+  //}
+  //
+  //return FALSE;
+}
+
+/**
+ * Determines API request access to various customer profile operations.
+ *
+ * @param $op
+ *   The operation to perform: view, update, create, or delete
+ * @param $args
+ *   The arguments array from the API request.
+ *
+ * @return
+ *   TRUE or FALSE indicating access for the current request.
+ */
+function commerce_services_customer_profile_access($op, $args) {
+  // Grant administrators access to do anything. This is the only check required
+  // for now as we're using a single administrative user for API requests.
+  if (user_access('administer customer profiles')) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Determines API request access to line item operations.
+ *
+ * @param $op
+ *   The operation to perform: view, update, create, or delete
+ * @param $args
+ *   The arguments array from the API request.
+ *
+ * @return
+ *   TRUE or FALSE indicating access for the current request.
+ */
+function commerce_services_line_item_access($op, $args) {
+  // Grant administrators access to do anything. This is the only check required
+  // for now as we're using a single administrative user for API requests.
+  if (user_access('administer line items')) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Determines API request access to payment transaction operations.
+ *
+ * @param $op
+ *   The operation to perform: view, update, create, or delete
+ * @param $args
+ *   The arguments array from the API request.
+ *
+ * @return
+ *   TRUE or FALSE indicating access for the current request.
+ */
+function commerce_services_payment_transaction_access($op, $args) {
+  // Grant administrators access to do anything. This is the only check required
+  // for now as we're using a single administrative user for API requests.
+  if (user_access('administer payments')) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Checks to see if a user exists for the specified uid.
+ */
+function commerce_services_user_exists($uid) {
+  return db_query('SELECT 1 FROM {users} WHERE uid = :uid', array(':uid' => $uid))->fetchField();
+}
+
+/**
+ * Checks to see if an order exists for the specified order_id.
+ */
+function commerce_services_order_exists($order_id) {
+  return db_query('SELECT 1 FROM {commerce_order} WHERE order_id = :order_id', array(':order_id' => $order_id))->fetchField();
+}
+
+/**
+ * Defines conversion info for objects that will be turned to arrays and vice
+ * versa when communicating with clients.
+ *
+ * When we flatten a Commerce entity to an array, we don't need to return all
+ * the properties, and we also have to do additional work to flatten complex
+ * field data structures. Similarly, when merging an array of values onto an
+ * entity, we have to accommodate those compelx field data structures and are
+ * limited by what properties have been exposed to the Entity API.
+ *
+ * This function maps entity properties to callbacks that govern how data should
+ * be converted between arrays and objects. Each property definition contains
+ * the following keys:
+ *
+ * - object callback: the function that will be called to merge data from a
+ *   values array for the property / field onto an obect
+ * - array callback: the function that will be called to convert the property /
+ *   field into an array
+ * - use default: boolean indicating whether or not to use a default value for
+ *   the property / field when converting the object to an array (does not
+ *   influence merging from an array to an object, as only values included in
+ *   the array will be considered for merging); defaults to TRUE
+ * - default value: default value to assign the property / field key in an array
+ *   when the object is converted; defaults to ''
+ */
+function commerce_services_object_info($object_type = '', $bundle = NULL) {
+  $object_info =& drupal_static(__FUNCTION__);
+
+  // Define the object property information for resources we define.
+  if (!isset($object_info)) {
+    $object_info = array(
+      'commerce_order' => array(
+        'order_id' => array('use default' => FALSE),
+        'order_number' => array('use default' => FALSE),
+        'uid' => array('default value' => 0),
+        'mail' => array(),
+        'status' => array(),
+        'commerce_line_items' => array(
+          'object callback' => 'FALSE',
+          'array callback' => '_commerce_services_convert_order_line_items',
+          'default value' => array(),
+          'array key' => 'line_items',
+        ),
+        'commerce_order_total' => array(
+          'object callback' => '_commerce_services_convert_array_price',
+          'array callback' => '_commerce_services_convert_price_property',
+          'default value' => array('amount' => 0, 'currency_code' => 'GBP'),
+          'array key' => 'order_total',
+        ),
+        'application' => array('use default' => FALSE),
+        'external_uid' => array('use default' => FALSE),
+        'created' => array('use default' => FALSE),
+        'changed' => array('use default' => FALSE),
+      ),
+      'commerce_customer_profile' => array(
+        'profile_id' => array('use default' => FALSE),
+        'type' => array('use default' => FALSE),
+        'uid' => array('default value' => 0),
+        'status' => array('default value' => TRUE),
+        'commerce_customer_address' => array(
+          'object callback' => '_commerce_services_convert_array_address',
+          'array callback' => '_commerce_services_convert_address_property',
+          'default value' => array(
+            'name' => '',
+            'street1' => '',
+            'street2' => '',
+            'city' => '',
+            'county' => '',
+            'postal_code' => '',
+            'country' => '',
+          ),
+          'array key' => 'address',
+        ),
+        'created' => array('use default' => FALSE),
+        'changed' => array('use default' => FALSE),
+      ),
+      'commerce_line_item' => array(
+        'line_item_id' => array('use default' => FALSE),
+        'order_id' => array('default value' => 0),
+        'type' => array('use default' => FALSE),
+        'line_item_label' => array('array key' => 'label'),
+        'quantity' => array('default value' => 1),
+        'commerce_unit_price' => array(
+          'object callback' => '_commerce_services_convert_array_price',
+          'array callback' => '_commerce_services_convert_price_property',
+          'default value' => array('amount' => 0, 'currency_code' => 'GBP'),
+          'array key' => 'unit_price',
+        ),
+        'commerce_total' => array(
+          'object callback' => '_commerce_services_convert_array_price',
+          'array callback' => '_commerce_services_convert_price_property',
+          'default value' => array('amount' => 0, 'currency_code' => 'GBP'),
+          'array key' => 'total',
+        ),
+        'data' => array(
+          'object callback' => '_commerce_services_convert_array_data',
+          'array callback' => '_commerce_services_convert_data_property',
+          'default value' => array(),
+        ),
+      ),
+      'commerce_payment_transaction' => array(
+        'uid' => array('default value' => 0),
+        'order_id' => array('default value' => 0),
+        'payment_method' => array(),
+        'instance_id' => array('use default' => FALSE),
+        'remote_id' => array(),
+        'message' => array(),
+        'message_variables' => array('default value' => array()),
+        'amount' => array('default value' => 0),
+        'currency_code' => array('default value' => 'GBP'),
+        'status' => array('default value' => 'success'),
+        'remote_status' => array(),
+        'payload' => array('default value' => array()),
+        'data' => array('default value' => array()),
+      ),
+    );
+
+    // Populate bundle info.
+    foreach ($object_info as $type => $objectInfo) {
+      // Fetch property info.
+      $propertyInfo = entity_get_property_info($type);
+      // Avoid PHP warnings.
+      if (!isset($propertyInfo) || !isset($propertyInfo['bundles'])) {
+        continue;
+      }
+      foreach ($propertyInfo['bundles'] as $lbundle => $propertyBundleInfo) {
+        // Avoid PHP warnings.
+        if (!isset($propertyInfo['bundles'][$lbundle]['properties'])) {
+          continue;
+        }
+        $key = $type . '#' . $lbundle;
+        $object_info[$key] = $objectInfo;
+        // Append properties.
+        foreach ($propertyInfo['bundles'][$lbundle]['properties'] as $property => $data) {
+          // Do not happend already added stuff.
+          // Neither not custom field stuff.
+          if (!isset($object_info[$key][$property]) && 'field_' === substr($property, 0, 6)) {
+            $object_info[$key][$property] = array('use default' => FALSE);
+          }
+        }
+      }
+    }
+
+    // Allow the base info array to be altered.
+    drupal_alter('commerce_services_object_info', $object_info);
+
+    // Add default object and array callbacks to the properties.
+    foreach ($object_info as $type => $properties) {
+      foreach ($properties as $key => $value) {
+        $object_info[$type][$key] += array(
+          'object callback' => '_commerce_services_convert_array_value',
+          'array callback' => '_commerce_services_convert_object_property',
+          'use default' => TRUE,
+          'default value' => '',
+        );
+      }
+    }
+  }
+
+  // Return all the object info or just the requested object.
+  if (!empty($object_type) && !empty($bundle)) {
+    return $object_info[$object_type . '#' . $bundle];
+  }
+  else if (!empty($object_type)) {
+    return $object_info[$object_type];
+  }
+  else {
+    return $object_info;
+  }
+
+  return FALSE;
+}
+
+/**
+ * Directly sets a property on the given object with the value from the array
+ * with the same key name.
+ */
+function _commerce_services_convert_array_value($object, $array, $property, $info = array()) {
+  if (isset($array[$property])) {
+    $object->{$property} = $array[$property];
+  }
+  elseif ($info['use default']) {
+    $object->{$property} = $info['default value'];
+  }
+}
+
+/**
+ * Directly sets a key in the given array to the value of the property on the
+ * object with the same name.
+ */
+function _commerce_services_convert_object_property(&$array, $object, $property, $info = array()) {
+  $array_key = empty($info['array key']) ? $property : $info['array key'];
+
+  if (!is_a($object, 'EntityMetadataWrapper')) {
+    if (isset($object->{$property})) {
+      $array[$array_key] = $object->{$property};
+    }
+    elseif ($info['use default']) {
+      $array[$array_key] = $info['default value'];
+    }
+  }
+  else {
+    if ($object->{$property}->value() !== NULL) {
+      $array[$array_key] = $object->{$property}->value();
+    }
+    elseif ($info['use default']) {
+      $array[$array_key] = $info['default value'];
+    }
+  }
+}
+
+/**
+ * Object callback for the "data" property that stores serialized additional
+ * information. It isn't defined in commerce_line_item_entity_property_info, so
+ * the default callback can't work (because the wrapper can't work).
+ */
+function _commerce_services_convert_array_data($object, $array, $property, $info = array()) {
+  // Fetch the actual entity, the wrapper will throw an exception in this case.
+  $object = $object->value();
+
+  _commerce_services_convert_array_value($object, $array, $property, $info);
+}
+
+/**
+ * Array callback for the "data" property that stores serialized additional
+ * information. It isn't defined in commerce_line_item_entity_property_info, so
+ * the default callback can't work (because the wrapper can't work).
+ */
+function _commerce_services_convert_data_property(&$array, $object, $property, $info = array()) {
+  // Fetch the actual entity, the wrapper will throw an exception in this case.
+  $object = $object->value();
+
+  _commerce_services_convert_object_property(&$array, $object, $property, $info);
+}
+
+/**
+ * Converts an order's line items to array values for return with an order.
+ */
+function _commerce_services_convert_order_line_items(&$array, $object, $property, $info = array()) {
+  $array_key = empty($info['array key']) ? $property : $info['array key'];
+  $line_items = array();
+
+  foreach ($object->{$property} as $delta => $line_item_wrapper) {
+    $line_items[] = commerce_services_object_to_array('commerce_line_item', $line_item_wrapper);
+  }
+
+  $array[$array_key] = $line_items;
+}
+
+/**
+ * Converts a price array to price field data on the given object; requires
+ * $object to be an entity metadata wrapper.
+ */
+function _commerce_services_convert_array_price($object, $array, $property, $info = array()) {
+  $object->{$property}->amount = $array[$property]['amount'];
+  $object->{$property}->currency_code = $array[$property]['currency_code'];
+  $object->{$property}->data = commerce_price_component_add($array[$property], 'base_price', $array[$property], TRUE);
+}
+
+/**
+ * Converts a price property to an array value for return to a client.
+ */
+function _commerce_services_convert_price_property(&$array, $object, $property, $info = array()) {
+  $array_key = empty($info['array key']) ? $property : $info['array key'];
+
+  if (!empty($object->{$property})) {
+    $array[$array_key] = array(
+      'amount' => $object->{$property}->amount->value(),
+      'currency_code' => $object->{$property}->currency_code->value(),
+    );
+  }
+  elseif ($info['use default']) {
+    $array[$array_key] = $info['default value'];
+  }
+}
+
+/**
+ * Converts an address array to address field data on the given object; requires
+ * $object to be an entity metadata wrapper.
+ */
+function _commerce_services_convert_array_address($object, $array, $property, $info = array()) {
+  $object->{$property}->name_line = $array[$property]['name'];
+  $object->{$property}->thoroughfare = $array[$property]['street1'];
+  $object->{$property}->premise = $array[$property]['street2'];
+  $object->{$property}->locality = $array[$property]['city'];
+  $object->{$property}->administrative_area = $array[$property]['county'];
+  $object->{$property}->postal_code = $array[$property]['postal_code'];
+  $object->{$property}->country = $array[$property]['country'];
+}
+
+/**
+ * Converts an address property to an array value for return to a client.
+ */
+function _commerce_services_convert_address_property(&$array, $object, $property, $info = array()) {
+  $array_key = empty($info['array key']) ? $property : $info['array key'];
+
+  if (!empty($object->{$property})) {
+    $array[$array_key] = array(
+      'name' => $object->{$property}->name_line->value(),
+      'street1' => $object->{$property}->thoroughfare->value(),
+      'street2' => $object->{$property}->premise->value(),
+      'city' => $object->{$property}->locality->value(),
+      'county' => $object->{$property}->administrative_area->value(),
+      'postal_code' => $object->{$property}->postal_code->value(),
+      'country' => $object->{$property}->country->value(),
+    );
+  }
+  elseif ($info['use default']) {
+    $array[$array_key] = $info['default value'];
+  }
+}
+
+/**
+ * Converts an object to an array for return to the client.
+ *
+ * @param $type
+ *   The type of object passed in.
+ * @param $object
+ *   The object or entity metadata wrapper to change to an array.
+ *
+ * @return
+ *   An array representing the object including only the keys that should be
+ *   communicated back to the client.
+ */
+function commerce_services_object_to_array($type, $object) {
+  $array = array();
+
+  $bundle = $object instanceof EntityDrupalWrapper ? $object->getBundle() : NULL;
+
+  // Loop over every property of the object exposed in the object info array.
+  foreach (commerce_services_object_info($type, $bundle) as $property => $info) {
+    // Get its array conversion callback.
+    $callback = $info['array callback'];
+
+    // If the callback is found...
+    if (function_exists($callback)) {
+      // Call it now to convert the given property to array values.
+      $callback($array, $object, $property, $info);
+    }
+  }
+
+  return $array;
+}
+
+/**
+ * Merges a values array onto an object for use when creating / updating.
+ *
+ * @param $values
+ *   An array of values to merge onto the given object.
+ * @param $type
+ *   The type of the target object.
+ * @param $object
+ *   The object to update with values from the array.
+ * @param $bypass
+ *   An array of object properties to bypass on the merge.
+ *
+ * @return
+ *   The updated object.
+ */
+function commerce_services_merge_values_to_object($values, $type, $object, $bypass = array()) {
+  $bundle = $object instanceof EntityDrupalWrapper ? $object->getBundle() : NULL;
+
+  $object_info = commerce_services_object_info($type, $bundle);
+
+  // Loop over every property of the object exposed in the object info array.
+  foreach ($values as $key => $value) {
+    // If we aren't supposed to bypas merging this property...
+    if (!in_array($key, $bypass) && !empty($object_info[$key])) {
+      $info = $object_info[$key];
+
+      // Get its object property conversion callback.
+      $callback = $info['object callback'];
+
+      // If the callback is found and we aren't supposed to bypass this property...
+      if (function_exists($callback)) {
+        // Call it now to merge the property from the array onto the object.
+        $callback($object, $values, $key, $info);
+      }
+    }
+  }
+}

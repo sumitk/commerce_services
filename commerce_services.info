@@ -1,0 +1,7 @@
+name = Commerce Services
+description = Provides integration with Services to create a Drupal Commerce API server.
+package = Services
+dependencies[] = ctools
+dependencies[] = services
+core = 7.x
+php = 5.x
