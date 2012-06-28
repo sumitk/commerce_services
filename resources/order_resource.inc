@@ -27,8 +27,7 @@
 
 function _commerce_services_order_create($values = array(), $product = array(), $billing = array()) {
   global $user;
-  $quantity = $product['quantity'];
-
+  
   // Return an error if an invalid order status is specified.
   if (empty($values['status'])) {
     $order_state = commerce_order_state_load('in_progress');
@@ -43,50 +42,47 @@ function _commerce_services_order_create($values = array(), $product = array(), 
   }
 
   // Create the new order.
-  $order = commerce_order_load_by_number(42);
-	//$order = commerce_order_new($user->uid, $status, 'commerce_order');
-	//commerce_order_save($order);
+  $order = commerce_order_new($user->uid, $status, 'commerce_order');
+  // Save the order to get an order ID.
+  commerce_order_save($order);
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
 
   // Merge in the specified values.
   commerce_services_merge_values_to_object($values, 'commerce_order', $order_wrapper, array('uid','status', 'commerce_order_total'));
-
-  // Save the order to get an order ID.
-  //$order_wrapper->order_number = 15;
-  commerce_order_save($order);
 
   // Does the order need to be resaved? Used to avoid resaving twice.
   $needs_resave = FALSE;
 
   // If line items should be created, do so now.
   if (!empty($product['id'])) {
-		// Load whatever product represents the item the customer will be
-		// paying for and create a line item for it.
-		$product = commerce_product_load($product['id']);
-		$line_item = commerce_product_line_item_new($product, $quantity, $order->order_id);
+  	$quantity = $product['quantity'];
+	// Load whatever product represents the item the customer will be
+	// paying for and create a line item for it.
+	$product = commerce_product_load($product['id']);
+	$line_item = commerce_product_line_item_new($product, $quantity, $order->order_id);
 
-		// Save the line item to get its ID.
-		commerce_line_item_save($line_item);
+	// Save the line item to get its ID.
+	commerce_line_item_save($line_item);
 		
-		// Add the line item to the order using fago's rockin' wrapper.
-		$order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-		$order_wrapper->commerce_line_items[] = $line_item;
+	// Add the line item to the order using fago's rockin' wrapper.
+	$order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+	$order_wrapper->commerce_line_items[] = $line_item;
 		
-		// resave order after adding line itemss
+	// resave order after adding line itemss
     $needs_resave = TRUE;
   }
 
   // If a billing customer profile should be created, do so now.
   if (!empty($billing)) {
-	  // defining address 
-		$address = array(
-	    'name' => !empty($billing['address']['name']) ? $billing['address']['name'] : '',
-	    'street1' => !empty($billing['address']['street1']) ? $billing['address']['street1'] : '',
-	    'street2' => !empty($billing['address']['street2']) ? $billing['address']['street2'] : '',
-	    'city' => !empty($billing['address']['city']) ? $billing['address']['city'] : '',
-	    'county' => !empty($billing['address']['county']) ? $billing['address']['county'] : '',
-	    'postal_code' => !empty($billing['address']['postal_code']) ? $billing['address']['postal_code'] : '',
-	    'country' => !empty($billing['address']['country']) ? $billing['address']['country'] :  variable_get('site_default_country', NULL),
+    // defining address 
+	$address = array(
+	  'name' => !empty($billing['address']['name']) ? $billing['address']['name'] : '',
+	  'street1' => !empty($billing['address']['street1']) ? $billing['address']['street1'] : '',
+	  'street2' => !empty($billing['address']['street2']) ? $billing['address']['street2'] : '',
+	  'city' => !empty($billing['address']['city']) ? $billing['address']['city'] : '',
+	  'county' => !empty($billing['address']['county']) ? $billing['address']['county'] : '',
+	  'postal_code' => !empty($billing['address']['postal_code']) ? $billing['address']['postal_code'] : '',
+	  'country' => !empty($billing['address']['country']) ? $billing['address']['country'] :  variable_get('site_default_country', NULL),
 	  );
 	
     $profile = _commerce_services_order_customer_profile_create(array('type'=>'billing', 'uid'=>$user->uid,'address'=>$address));
@@ -101,9 +97,9 @@ function _commerce_services_order_create($values = array(), $product = array(), 
     }
 
     // Add the profile to the order.
-		// commenting this because it is giving  invalid data value given
-		// more details http://drupal.org/node/1151614
-		//return $profile;
+	// commenting this because it is giving  invalid data value given
+	// more details http://drupal.org/node/1151614
+	//return $profile;
 		
     //$order_wrapper->commerce_customer_billing->profile_id = $profile->profile_id;
     $needs_resave = TRUE;
@@ -119,111 +115,42 @@ function _commerce_services_order_create($values = array(), $product = array(), 
 }
 
 /**
- * Creates a new Commerce Order with support for cascading entity creation of
- * associated Commerce Line Items.
+ * Adds a new Product to existing Order {"order_id":42,"product":{"id":"1","quantity":9}}
  *
- * @param $values
- *   An array of values to merge into the new order object:
- *   - uid: the uid of the user who owns the order
- *   - status: the order status to initialize the new order to; defaults to the
- *     default status of the "In progress" order state
- *   - order_number: an alphanumeric order number; defaults to the order ID
- *   - mail: the primary contact e-mail for this order
- *   - hostname: the IP address of the customer who generated this order
- *   - data: an array of additional data to store with the order.
+ * @param $order_id
+ *   Existing order id
  * @param $product
- *   Array of Product id and quantities of first product of cart "product":{"id":"2","quantity":4}
- * @param $billing
- *   Optional array of billing fields
- *   Example "billing":{"uid":1,"address":{"name":"mikka","street1":"my one street","street2":"My two 	    street","city":"Afreenpurra","county":"mikooo","postal_code":"93311","country":"US"}}
+ *   An array of product id and quantity:
+ *   - id: the product id of product
+ *   - quantity: product quantity to be added in order
  *
  * @return
- *   The newly created order or FALSE with an error message.
- *
- * @see commerce_line_item_create.inc
+ *   The line item id of new line item.
  */
 
 function _commerce_services_order_add_product($order_id = '', $product = array()) {
-  global $user;
-
-  // Return an error if an invalid order status is specified.
-  if (empty($values['status'])) {
-    $order_state = commerce_order_state_load('in_progress');
-    $status = $order_state['default_status'];
-  }
-  else {
-    $status = $values['status'];
-
-    if (!commerce_order_status_load($status)) {
-      return services_error(t('Order status @name does not exist.', array('@name' => $status)), 406);
-    }
-  }
-
-  // Create the new order.
-  $order = commerce_order_load_by_number(42);
-	//$order = commerce_order_new($user->uid, $status, 'commerce_order');
-	//commerce_order_save($order);
+  
+  // Loads an existing order.
+  $order = commerce_order_load_by_number($order_id);
+  // Creating order wrapper
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-
-  // Merge in the specified values.
-  commerce_services_merge_values_to_object($values, 'commerce_order', $order_wrapper, array('uid','status', 'commerce_order_total'));
-
-  // Save the order to get an order ID.
-  //$order_wrapper->order_number = 15;
-  commerce_order_save($order);
-
-  // Does the order need to be resaved? Used to avoid resaving twice.
-  $needs_resave = FALSE;
 
   // If line items should be created, do so now.
   if (!empty($product['id'])) {
-		$quantity = $product['quantity'];
-		// Load whatever product represents the item the customer will be
-		// paying for and create a line item for it.
-		$product = commerce_product_load($product['id']);
-		$line_item = commerce_product_line_item_new($product, $quantity, $order->order_id);
+	$quantity = $product['quantity'];
+	// Load whatever product represents the item the customer will be
+	// paying for and create a line item for it.
+	$product = commerce_product_load($product['id']);
+	$line_item = commerce_product_line_item_new($product, $quantity, $order->order_id);
 
-		// Save the line item to get its ID.
-		commerce_line_item_save($line_item);
+	// Save the line item to get its ID.
+	commerce_line_item_save($line_item);
 		
-		// Add the line item to the order using fago's rockin' wrapper.
-		$order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-		$order_wrapper->commerce_line_items[] = $line_item;
-		
-		// resave order after adding line itemss
-    $needs_resave = TRUE;
-  }
-
-  // If a billing customer profile should be created, do so now.
-  if (!empty($billing)) {
-	  // defining address 
-		$address = array(
-	    'name' => !empty($billing['address']['name']) ? $billing['address']['name'] : '',
-	    'street1' => !empty($billing['address']['street1']) ? $billing['address']['street1'] : '',
-	    'street2' => !empty($billing['address']['street2']) ? $billing['address']['street2'] : '',
-	    'city' => !empty($billing['address']['city']) ? $billing['address']['city'] : '',
-	    'county' => !empty($billing['address']['county']) ? $billing['address']['county'] : '',
-	    'postal_code' => !empty($billing['address']['postal_code']) ? $billing['address']['postal_code'] : '',
-	    'country' => !empty($billing['address']['country']) ? $billing['address']['country'] :  variable_get('site_default_country', NULL),
-	  );
+	// Add the line item to the order using fago's rockin' wrapper.
+	$order_wrapper = entity_metadata_wrapper('commerce_order', $order);
+	$order_wrapper->commerce_line_items[] = $line_item;
 	
-    $profile = _commerce_services_order_customer_profile_create(array('type'=>'billing', 'uid'=>$user->uid,'address'=>$address));
-
-    // If the profile creation failed, return the error message and exit.
-    if (!$profile) {
-      // First delete the order.
-      commerce_order_delete($order->order_id);
-
-      // Now return the error message.
-      return services_error(t('Could not create a new billing profile with the given values.'), 406);
-    }
-
-    // Add the profile to the order.
-		// commenting this because it is giving  invalid data value given
-		// more details http://drupal.org/node/1151614
-		//return $profile;
-		
-    //$order_wrapper->commerce_customer_billing->profile_id = $profile->profile_id;
+	// resave order after adding line itemss
     $needs_resave = TRUE;
   }
 
@@ -232,8 +159,8 @@ function _commerce_services_order_add_product($order_id = '', $product = array()
     commerce_order_save($order);
   }
 
-  // Return the order converted to an array.
-  return $order;
+  // Return line item id of new line item
+  return $line_item->line_item_id;
 }
 
 /**
@@ -245,16 +172,17 @@ function _commerce_services_order_add_product($order_id = '', $product = array()
  *   The ID of the line item to delete from the order.
  *
  * @return
+ * 	 FALSE: if line item does not exist
  *   The order with the matching product line item deleted from the line item
  *     reference field.
  */
 function _commerce_services_order_line_item_delete($order_id, $line_item_id) {
   $line_item = commerce_line_item_load($line_item_id);
-	$order = commerce_order_load($order_id);
+  $order = commerce_order_load($order_id);
 	
   // Check to ensure the line item exists.
   if (!$line_item) {
-    return 'Line item do not exist.';
+    return FALSE;
   }
 
   // Remove the line item from the line item reference field.
@@ -264,11 +192,12 @@ function _commerce_services_order_line_item_delete($order_id, $line_item_id) {
   commerce_line_item_delete($line_item->line_item_id);
 
   //return commerce_order_load($order_id);
-	return TRUE;
+  // returns true if successful
+  return TRUE;
 }
 
 /**
- * Deletes a product line item from a cart order.
+ * Edits quantity field of line item in product order 
  *
  * @param $order_id
  *   Order id of user order.
@@ -278,27 +207,27 @@ function _commerce_services_order_line_item_delete($order_id, $line_item_id) {
  *   New quantity for line item product.
  *
  * @return
- *   The order with the matching product line item deleted from the line item
+ *   TRUE: if success in editing quantity. FALSE: if line item does not exist
  *     reference field.
  */
 function _commerce_services_order_line_item_quantity_edit($order_id, $line_item_id, $quantity) {
   $line_item = commerce_line_item_load($line_item_id);
-	$order = commerce_order_load($order_id);
+  $order = commerce_order_load($order_id);
 
 	// Check to ensure the line item exists.
   if (!$line_item) {
-    return 'Line item do not exist.';
+    return FALSE;
   }
 
-	//checking if line item is part of current order
-	if ($order->order_id == $line_item->order_id) {
-		// changing quantity of current line item
-		$line_item->quantity = $quantity;
-		// saving new line item
-		commerce_line_item_save($line_item);
-	} else {
-		return 'Line item is not part of current order.';
-	}
+  //checking if line item is part of current order
+  if ($order->order_id == $line_item->order_id) {
+    // changing quantity of current line item
+    $line_item->quantity = $quantity;
+    // saving new line item
+    commerce_line_item_save($line_item);
+  } else {
+    return FALSE;
+  }
 
   return TRUE;
 }
