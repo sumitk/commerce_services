@@ -805,7 +805,7 @@ function _commerce_services_convert_array_value($object, $array, $property, $inf
  * Directly sets a key in the given array to the value of the property on the
  * object with the same name.
  */
-function _commerce_services_convert_object_property(&$array, $object, $property, $info = array()) {
+function _commerce_services_convert_object_property($array, $object, $property, $info = array()) {
   $array_key = empty($info['array key']) ? $property : $info['array key'];
 
   if (!is_a($object, 'EntityMetadataWrapper')) {
@@ -843,17 +843,17 @@ function _commerce_services_convert_array_data($object, $array, $property, $info
  * information. It isn't defined in commerce_line_item_entity_property_info, so
  * the default callback can't work (because the wrapper can't work).
  */
-function _commerce_services_convert_data_property(&$array, $object, $property, $info = array()) {
+function _commerce_services_convert_data_property($array, $object, $property, $info = array()) {
   // Fetch the actual entity, the wrapper will throw an exception in this case.
   $object = $object->value();
 
-  _commerce_services_convert_object_property(&$array, $object, $property, $info);
+  _commerce_services_convert_object_property($array, $object, $property, $info);
 }
 
 /**
  * Converts an order's line items to array values for return with an order.
  */
-function _commerce_services_convert_order_line_items(&$array, $object, $property, $info = array()) {
+function _commerce_services_convert_order_line_items($array, $object, $property, $info = array()) {
   $array_key = empty($info['array key']) ? $property : $info['array key'];
   $line_items = array();
 
@@ -877,7 +877,7 @@ function _commerce_services_convert_array_price($object, $array, $property, $inf
 /**
  * Converts a price property to an array value for return to a client.
  */
-function _commerce_services_convert_price_property(&$array, $object, $property, $info = array()) {
+function _commerce_services_convert_price_property($array, $object, $property, $info = array()) {
   $array_key = empty($info['array key']) ? $property : $info['array key'];
 
   if (!empty($object->{$property})) {
@@ -908,7 +908,7 @@ function _commerce_services_convert_array_address($object, $array, $property, $i
 /**
  * Converts an address property to an array value for return to a client.
  */
-function _commerce_services_convert_address_property(&$array, $object, $property, $info = array()) {
+function _commerce_services_convert_address_property($array, $object, $property, $info = array()) {
   $array_key = empty($info['array key']) ? $property : $info['array key'];
 
   if (!empty($object->{$property})) {
