@@ -327,12 +327,12 @@ function commerce_services_services_resources() {
         'callback' => '_commerce_services_payment_transaction_create',
         'args' => array(
           array(
-		    'name' => 'values',
-		    'type' => 'array',
-		    'description' => 'An array of values to merge into the new payment transaction object.',
-		    'source' => 'data',
-		    'optional' => FALSE,
-		  ),
+		    		'name' => 'values',
+		    		'type' => 'array',
+		    		'description' => 'An array of values to merge into the new payment transaction object.',
+		    		'source' => 'data',
+		    		'optional' => FALSE,
+		  		),
         ),
       ),
       //'update' => array(
@@ -421,6 +421,22 @@ function commerce_services_services_resources() {
       //  'access arguments append' => TRUE,
       //),
     //),
+		'commerce_system' => array(
+  	  'actions' => array(
+  	    'connect' => array(
+					'help' => 'Forcefully Starts user session for anon users. Helpful while making connect calls from mobile apps.',
+  	      'access callback' => 'services_access_menu',
+  	      'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/system_resource'),
+  	      'callback' => '_commerce_services_connect',
+  	    ),
+				'session_destroy' => array(
+					'help' => 'Deletes user session.',
+  	      'access callback' => 'services_access_menu',
+  	      'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/system_resource'),
+  	      'callback' => '_commerce_services_session_destroy',
+  	    ),
+  	  ),
+    ),
   );
 }
 
