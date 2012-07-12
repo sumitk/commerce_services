@@ -20,7 +20,7 @@ function _commerce_services_connect() {
     $return->sessid = session_id();
     $return->user = $user;
 
-    services_remove_user_data($account);
+    //services_remove_user_data($account);
 
     return $return;
   } else {
@@ -28,7 +28,7 @@ function _commerce_services_connect() {
     $return->sessid = session_id();
     $return->user = $user;
 
-    services_remove_user_data($account);
+    //services_remove_user_data($account);
 
     return $return;
   }
