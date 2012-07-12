@@ -18,17 +18,19 @@ function _commerce_services_connect() {
     
     $return = new stdClass();
     $return->sessid = session_id();
+    $return->session_name = session_name();
     $return->user = $user;
 
-    //services_remove_user_data($account);
+    services_remove_user_data($account);
 
     return $return;
   } else {
     $return = new stdClass();
     $return->sessid = session_id();
+    $return->session_name = session_name();
     $return->user = $user;
 
-    //services_remove_user_data($account);
+    services_remove_user_data($account);
 
     return $return;
   }
