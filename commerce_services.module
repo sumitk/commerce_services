@@ -32,395 +32,395 @@ function commerce_services_permission() {
  */
 function commerce_services_services_resources() {
   return array(
-	'cart' => array(
-      'retrieve' => array(
-        'help' => 'Retrieves a Commerce Cart Order for the specified user.',
-        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/cart_resource'),
-        'access callback' => 'commerce_services_order_access',
-        'access arguments' => array('view'),
-        'access arguments append' => TRUE,
-		'callback' => '_commerce_services_cart_order_retrieve',
-        'args' => array(
-		  array(
-		    'name' => 'uid',
-		    'type' => 'int',
-			 'description' => 'The uid of the user whose order in progress should be returned.',
-			 'source' => array('path' => 0),
-			 'optional' => FALSE,
-		  ),
-		),
-      ),
-      'update' => array(
-        'help' => 'Empties the line items from the Commerce Cart Order of the specified user.',
-        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/cart_resource'),
-		'access callback' => 'commerce_services_order_access',
-        'access arguments' => array('update'),
-        'access arguments append' => TRUE,
-        'callback' => '_commerce_services_cart_order_empty',
-		'args' => array(
-		  array(
-		    'name' => 'uid',
-		    'type' => 'int',
-		    'description' => 'The uid of the user whose order in progress should be emptied.',
-		    'source' => array('path' => 0),
-		    'optional' => FALSE,
-		  ),
-		),
-      ),
-    ),
-    'customer' => array(
-      //'retrieve' => array(
-      //  'help' => 'Retrieves customer profile data from Drupal Commerce',
-      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/customer_resource'
-      //  ),
-      //  'callback' => '_customer_resource_retrieve',
-      //  'access callback' => '_customer_resource_access',
-      //  'access arguments' => array('view'),
-      //  'access arguments append' => TRUE,
-      //  'args' => array(
-      //    array(
-      //      'name' => 'profile_id',
-      //      'type' => 'int',
-      //      'description' => 'The customer profile Id',
-      //      'source' => array('path' => '0'),
-      //      'optional' => FALSE,
-      //    ),
-      //  ),
-      //),
-      'create' => array(
-        'help' => 'Creates a new customer profile for Drupal Commerce',
-        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/customer_resource'),
-		'access callback' => 'commerce_services_customer_profile_access',
-        'access arguments' => array('create'),
-        'access arguments append' => TRUE,
-        'callback' => '_commerce_services_customer_profile_create',
-		'args' => array(
-		  array(
-		    'name' => 'values',
-		    'type' => 'array',
-		    'description' => 'An array of values to merge into the new customer profile object.',
-		    'source' => 'data',
-		    'optional' => FALSE,
-		  ),
-		),
-      ),
-      //'update' => array(
-      //  'help' => 'Updates a customer profile at Drupal Commerce',
-      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/customer_resource'),
-      //  'callback' => '_customer_resource_update',
-      //  'args' => array(
-      //    array(
-      //      'name' => 'profile_id',
-      //      'type' => 'int',
-      //      'description' => 'The customer profile Id to get',
-      //      'source' => array('path' => '0'),
-      //      'optional' => FALSE,
-      //    ),
-      //    array(
-      //      'name' => 'profile',
-      //      'optional' => FALSE,
-      //      'source' => 'data',
-      //      'description' => 'The customer profile data to be updated',
-      //      'type' => 'array',
-      //    ),
-      //  ),
-      //  'access callback' => '_customer_resource_access',
-      //  'access arguments' => array('update'),
-      //  'access arguments append' => TRUE,
-      //),
-    ),
-    'order' => array(
-	  'create' => array(
-        'help' => 'Creates a new order for Drupal Commerce',
-        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
-		'access callback' => 'commerce_services_order_access',
-        'access arguments' => array('create'),
-        'access arguments append' => TRUE,
-        'callback' => '_commerce_services_order_create',
-        'args' => array(
-		  array(
-		    'name' => 'product',
-		    'type' => 'array',
-		    'description' => 'First product Product ID and quantity added to order.',
-		    'source' => array('data'=>'product'),
-		    'optional' => FALSE,
-		  ),
-        ),
-      ),
-      'retrieve' => array(
-        'help' => 'Retrieves an order from Drupal Commerce',
-        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
-        'access callback' => 'commerce_services_order_access',
-        'access arguments' => array('view'),
-        'access arguments append' => TRUE,
-		'callback' => '_commerce_services_order_load',
-        'args' => array(
-		  array(
-		    'name' => 'order_id',
-		    'type' => 'int',
-		    'description' => 'The ID of the order to retrieve.',
-		    'source' => array('path' => 0),
-		    'optional' => FALSE,
-		  ),
-		),
-      ),
-	  'delete' => array(
-        'help' => 'Deletes an order from Drupal Commerce',
-        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
-        'access callback' => 'commerce_services_order_access',
-        'access arguments' => array('delete'),
-        'access arguments append' => TRUE,
-		'callback' => '_commerce_services_order_delete',
-        'args' => array(
-		  array(
-		    'name' => 'order_id',
-		    'optional' => FALSE,
-		    'source' => array('path' => 0),
-		    'type' => 'int',
-		    'description' => 'The ID of the order to delete.',
-		  ),
-		),
-	  ),
-	  'index' => array(
-        'help' => 'Indexes an order from Drupal Commerce',
-        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
-        'access callback' => 'commerce_services_order_access',
-        'access arguments' => array('view'),
-        'access arguments append' => TRUE,
-		'callback' => '_commerce_services_order_index',
-        'args' => array(
-		  array(
-		    'name' => 'parameters',
-		    'type' => 'array',
-		    'description' => 'Parameters array',
-		    'source' => array('param' => 'parameters'),
-		    'optional' => TRUE,
-		    'default value' => array(),
-		  ),
-		  array(
-		    'name' => 'page',
-		    'type' => 'int',
-		    'description' => 'The zero-based index of the page to get, defaults to 0.',
-		    'source' => array('param' => 'page'),
-		    'optional' => TRUE,
-		    'default value' => 0,
-		  ),
-		),
-      ),
-      'update' => array(
-        'help' => 'Updates an order at Drupal Commerce',
-        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
-		'access callback' => 'commerce_services_order_access',
-        'access arguments' => array('update'),
-        'access arguments append' => TRUE,
-        'callback' => '_commerce_services_order_save',
-        'args' => array(
-		  array(
-		    'name' => 'order_id',
-		    'type' => 'int',
-		    'description' => 'The ID of the order to update.',
-		    'source' => array('path' => 0),
-		    'optional' => FALSE,
-		  ),
-		  array(
-		    'name' => 'values',
-		    'type' => 'array',
-		    'description' => 'An array of values to merge into the loaded order object.',
-		    'source' => 'data',
-		    'optional' => FALSE,
-		  ),
-		),
-      ),
-      'actions' => array(
-      	'product_add' => array(
-	      'help' => 'Add new product to existing order',
-	      'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
-	      'access callback' => 'commerce_services_order_access',
-	      'access arguments' => array('create'),
-	      'access arguments append' => TRUE,
-	      'callback' => '_commerce_services_order_add_product',
-	      'args' => array(
-		    array(
-		      'name' => 'product',
-		      'type' => 'array',
-		      'description' => 'An array Product ID and quantity to be added to order.',
-		      'source' => array('data'=>'product'),
-		      'optional' => FALSE,
+		'cart' => array(
+  	  'retrieve' => array(
+  	    'help' => 'Retrieves a Commerce Cart Order for the specified user.',
+  	    'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/cart_resource'),
+  	    'access callback' => 'commerce_services_order_access',
+  	    'access arguments' => array('view'),
+  	    'access arguments append' => TRUE,
+				'callback' => '_commerce_services_cart_order_retrieve',
+  	    'args' => array(
+					array(
+					  'name' => 'uid',
+					  'type' => 'int',
+					  'description' => 'The uid of the user whose order in progress should be returned.',
+					  'source' => array('path' => 0),
+					  'optional' => FALSE,
+					),
+				),
+  	  ),
+  	  'update' => array(
+  	    'help' => 'Empties the line items from the Commerce Cart Order of the specified user.',
+  	    'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/cart_resource'),
+				'access callback' => 'commerce_services_order_access',
+  	    'access arguments' => array('update'),
+  	    'access arguments append' => TRUE,
+  	    'callback' => '_commerce_services_cart_order_empty',
+				'args' => array(
+				  array(
+				    'name' => 'uid',
+				    'type' => 'int',
+				    'description' => 'The uid of the user whose order in progress should be emptied.',
+				    'source' => array('path' => 0),
+				    'optional' => FALSE,
+				  ),
+				),
+  	  ),
+  	),
+  	'customer' => array(
+  	  //'retrieve' => array(
+  	  //  'help' => 'Retrieves customer profile data from Drupal Commerce',
+  	  //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/customer_resource'
+  	  //  ),
+  	  //  'callback' => '_customer_resource_retrieve',
+  	  //  'access callback' => '_customer_resource_access',
+  	  //  'access arguments' => array('view'),
+  	  //  'access arguments append' => TRUE,
+  	  //  'args' => array(
+  	  //    array(
+  	  //      'name' => 'profile_id',
+  	  //      'type' => 'int',
+  	  //      'description' => 'The customer profile Id',
+  	  //      'source' => array('path' => '0'),
+  	  //      'optional' => FALSE,
+  	  //    ),
+  	  //  ),
+  	  //),
+  	  'create' => array(
+  	    'help' => 'Creates a new customer profile for Drupal Commerce',
+  	    'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/customer_resource'),
+				'access callback' => 'commerce_services_customer_profile_access',
+  	    'access arguments' => array('create'),
+  	    'access arguments append' => TRUE,
+  	    'callback' => '_commerce_services_customer_profile_create',
+				'args' => array(
+				  array(
+				    'name' => 'values',
+				    'type' => 'array',
+				    'description' => 'An array of values to merge into the new customer profile object.',
+				    'source' => 'data',
+				    'optional' => FALSE,
+				  ),
+				),
+  	  ),
+  	  //'update' => array(
+  	  //  'help' => 'Updates a customer profile at Drupal Commerce',
+  	  //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/customer_resource'),
+  	  //  'callback' => '_customer_resource_update',
+  	  //  'args' => array(
+  	  //    array(
+  	  //      'name' => 'profile_id',
+  	  //      'type' => 'int',
+  	  //      'description' => 'The customer profile Id to get',
+  	  //      'source' => array('path' => '0'),
+  	  //      'optional' => FALSE,
+  	  //    ),
+  	  //    array(
+  	  //      'name' => 'profile',
+  	  //      'optional' => FALSE,
+  	  //      'source' => 'data',
+  	  //      'description' => 'The customer profile data to be updated',
+  	  //      'type' => 'array',
+  	  //    ),
+  	  //  ),
+  	  //  'access callback' => '_customer_resource_access',
+  	  //  'access arguments' => array('update'),
+  	  //  'access arguments append' => TRUE,
+  	  //),
+  	),
+  	'order' => array(
+			'create' => array(
+  	    'help' => 'Creates a new order for Drupal Commerce',
+  	    'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+				'access callback' => 'commerce_services_order_access',
+  	    'access arguments' => array('create'),
+  	    'access arguments append' => TRUE,
+  	    'callback' => '_commerce_services_order_create',
+  	    'args' => array(
+		  		array(
+		    		'name' => 'product',
+		    		'type' => 'array',
+		    		'description' => 'First product Product ID and quantity added to order.',
+		    		'source' => array('data'=>'product'),
+		    		'optional' => TRUE,
+		  		),
+  	    ),
+  	  ),
+  	  'retrieve' => array(
+  	    'help' => 'Retrieves an order from Drupal Commerce',
+  	    'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+  	    'access callback' => 'commerce_services_order_access',
+  	    'access arguments' => array('view'),
+  	    'access arguments append' => TRUE,
+				'callback' => '_commerce_services_order_load',
+  	    'args' => array(
+		  		array(
+		  		  'name' => 'order_id',
+		  		  'type' => 'int',
+		  		  'description' => 'The ID of the order to retrieve.',
+		  		  'source' => array('path' => 0),
+		  		  'optional' => FALSE,
+		  		),
+				),
+  	  ),
+		  'delete' => array(
+  	    'help' => 'Deletes an order from Drupal Commerce',
+  	    'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+  	    'access callback' => 'commerce_services_order_access',
+  	    'access arguments' => array('delete'),
+  	    'access arguments append' => TRUE,
+		    'callback' => '_commerce_services_order_delete',
+  	    'args' => array(
+		    	array(
+		    	  'name' => 'order_id',
+		    	  'optional' => FALSE,
+		    	  'source' => array('path' => 0),
+		    	  'type' => 'int',
+		    	  'description' => 'The ID of the order to delete.',
+		    	),
 		    ),
-	      ),
-	    ),
-	    'line_item_delete' => array(
-	      'help' => 'Delete product line item of existing order',
-	      'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
-	      'access callback' => 'commerce_services_order_access',
-	      'access arguments' => array('create'),
-	      'access arguments append' => TRUE,
-	      'callback' => '_commerce_services_order_line_item_delete',
-	      'args' => array(
-	        array(
-	          'name' => 'order_id',
-	          'type' => 'integer',
-	          'description' => 'Order ID of an existing order.',
-	          'source' => array('data'=>'order_id'),
-	          'optional' => FALSE,
+		  ),
+		  'index' => array(
+  	    'help' => 'Indexes an order from Drupal Commerce',
+  	    'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+  	    'access callback' => 'commerce_services_order_access',
+  	    'access arguments' => array('view'),
+  	    'access arguments append' => TRUE,
+		    'callback' => '_commerce_services_order_index',
+  	    'args' => array(
+		    	array(
+		    	  'name' => 'parameters',
+		    	  'type' => 'array',
+		    	  'description' => 'Parameters array',
+		    	  'source' => array('param' => 'parameters'),
+		    	  'optional' => TRUE,
+		    	  'default value' => array(),
+		    	),
+		    	array(
+		    	  'name' => 'page',
+		    	  'type' => 'int',
+		    	  'description' => 'The zero-based index of the page to get, defaults to 0.',
+		    	  'source' => array('param' => 'page'),
+		    	  'optional' => TRUE,
+		    	  'default value' => 0,
+		    	),
 		    ),
-		    array(
-		      'name' => 'line_item_id',
-		      'type' => 'integer',
-		      'description' => 'Line item id to be deleted.',
-		      'source' => array('data'=>'line_item_id'),
-		      'optional' => FALSE,
-		    ),
-	      ),
-	    ),
-	    'line_item_quantity_edit' => array(
-	      'help' => 'Edit product line item quantity for existing order',
-	      'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
-	      'access callback' => 'commerce_services_order_access',
-	      'access arguments' => array('create'),
-	      'access arguments append' => TRUE,
-	      'callback' => '_commerce_services_order_line_item_quantity_edit',
-	      'args' => array(
-	        array(
-	          'name' => 'line_item_id',
-	          'type' => 'integer',
-	          'description' => 'Line item id of line item to be edited.',
-	          'source' => array('data'=>'line_item_id'),
-	          'optional' => FALSE,
-	        ),
-	        array(
-	          'name' => 'quantity',
-	          'type' => 'integer',
-	          'description' => 'New quantity for line item.',
-	          'source' => array('data'=>'quantity'),
-	          'optional' => FALSE,
-	        ),
-	      ),
-	    ),
-      ),
-    ),
-    'payment' => array(
-      //'retrieve' => array(
-      //  'help' => 'Retrieves a payment transaction from Drupal Commerce',
-      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/payment_resource'
-      //  ),
-      //  'callback' => '_payment_resource_retrieve',
-      //  'access callback' => '_payment_resource_access',
-      //  'access arguments' => array('view'),
-      //  'access arguments append' => TRUE,
-      //  'args' => array(
-      //    array(
-      //      'name' => 'transaction_id',
-      //      'type' => 'int',
-      //      'description' => 'The Payment Transaction Id',
-      //      'source' => array('path' => '0'),
-      //      'optional' => FALSE,
-      //    ),
-      //  ),
-      //),
-      'create' => array(
-        'help' => 'Creates a new Payment Transaction for an order in Drupal Commerce',
-        'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/payment_resource'),
-        'access callback' => 'commerce_services_payment_transaction_access',
-        'access arguments' => array('create'),
-        'access arguments append' => TRUE,
-        'callback' => '_commerce_services_payment_transaction_create',
-        'args' => array(
-          array(
+  	  ),
+  	  'update' => array(
+  	    'help' => 'Updates an order at Drupal Commerce',
+  	    'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+		  	'access callback' => 'commerce_services_order_access',
+  	    'access arguments' => array('update'),
+  	    'access arguments append' => TRUE,
+  	    'callback' => '_commerce_services_order_save',
+  	    'args' => array(
+		  		array(
+		  		  'name' => 'order_id',
+		  		  'type' => 'int',
+		  		  'description' => 'The ID of the order to update.',
+		  		  'source' => array('path' => 0),
+		  		  'optional' => FALSE,
+		  		),
+		  		array(
+		  		  'name' => 'values',
+		  		  'type' => 'array',
+		  		  'description' => 'An array of values to merge into the loaded order object.',
+		  		  'source' => 'data',
+		  		  'optional' => FALSE,
+		  		),
+		  	),
+  	  ),
+  	  'actions' => array(
+  	  	'product_add' => array(
+		    	'help' => 'Add new product to existing order',
+		    	'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+		    	'access callback' => 'commerce_services_order_access',
+		    	'access arguments' => array('create'),
+		    	'access arguments append' => TRUE,
+		    	'callback' => '_commerce_services_order_add_product',
+		    	'args' => array(
+		    		array(
+		    		  'name' => 'product',
+		    		  'type' => 'array',
+		    		  'description' => 'An array Product ID and quantity to be added to order.',
+		    		  'source' => array('data'=>'product'),
+		    		  'optional' => FALSE,
+		    		),
+		    	),
+		  	),
+		  	'line_item_delete' => array(
+		  	  'help' => 'Delete product line item of existing order',
+		  	  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+		  	  'access callback' => 'commerce_services_order_access',
+		  	  'access arguments' => array('create'),
+		  	  'access arguments append' => TRUE,
+		  	  'callback' => '_commerce_services_order_line_item_delete',
+		  	  'args' => array(
+		  	    array(
+		  	      'name' => 'order_id',
+		  	      'type' => 'integer',
+		  	      'description' => 'Order ID of an existing order.',
+		  	      'source' => array('data'=>'order_id'),
+		  	      'optional' => FALSE,
+		  	  	),
+		  	  	array(
+		  	  	  'name' => 'line_item_id',
+		  	  	  'type' => 'integer',
+		  	  	  'description' => 'Line item id to be deleted.',
+		  	  	  'source' => array('data'=>'line_item_id'),
+		  	  	  'optional' => FALSE,
+		  	  	),
+		  	  ),
+		  	),
+		  	'line_item_quantity_edit' => array(
+		  	  'help' => 'Edit product line item quantity for existing order',
+		  	  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/order_resource'),
+		  	  'access callback' => 'commerce_services_order_access',
+		  	  'access arguments' => array('create'),
+		  	  'access arguments append' => TRUE,
+		  	  'callback' => '_commerce_services_order_line_item_quantity_edit',
+		  	  'args' => array(
+		  	    array(
+		  	      'name' => 'line_item_id',
+		  	      'type' => 'integer',
+		  	      'description' => 'Line item id of line item to be edited.',
+		  	      'source' => array('data'=>'line_item_id'),
+		  	      'optional' => FALSE,
+		  	    ),
+		  	    array(
+		  	      'name' => 'quantity',
+		  	      'type' => 'integer',
+		  	      'description' => 'New quantity for line item.',
+		  	      'source' => array('data'=>'quantity'),
+		  	      'optional' => FALSE,
+		  	    ),
+		  	  ),
+		  	),
+			),
+  	),
+  	'payment' => array(
+  	  //'retrieve' => array(
+  	  //  'help' => 'Retrieves a payment transaction from Drupal Commerce',
+  	  //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/payment_resource'
+  	  //  ),
+  	  //  'callback' => '_payment_resource_retrieve',
+  	  //  'access callback' => '_payment_resource_access',
+  	  //  'access arguments' => array('view'),
+  	  //  'access arguments append' => TRUE,
+  	  //  'args' => array(
+  	  //    array(
+  	  //      'name' => 'transaction_id',
+  	  //      'type' => 'int',
+  	  //      'description' => 'The Payment Transaction Id',
+  	  //      'source' => array('path' => '0'),
+  	  //      'optional' => FALSE,
+  	  //    ),
+  	  //  ),
+  	  //),
+  	  'create' => array(
+  	    'help' => 'Creates a new Payment Transaction for an order in Drupal Commerce',
+  	    'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/payment_resource'),
+  	    'access callback' => 'commerce_services_payment_transaction_access',
+  	    'access arguments' => array('create'),
+  	    'access arguments append' => TRUE,
+  	    'callback' => '_commerce_services_payment_transaction_create',
+  	    'args' => array(
+  	      array(
 		    		'name' => 'values',
 		    		'type' => 'array',
 		    		'description' => 'An array of values to merge into the new payment transaction object.',
 		    		'source' => 'data',
 		    		'optional' => FALSE,
 		  		),
-        ),
-      ),
-      //'update' => array(
-      //  'help' => 'Updates a Payment Transaction for an Order in Drupal Commerce',
-      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/payment_resource'),
-      //  'callback' => '_payment_resource_update',
-      //  'args' => array(
-      //    array(
-      //      'name' => 'transaction_id',
-      //      'type' => 'int',
-      //      'description' => 'The Payment Transaction Id to get',
-      //      'source' => array('path' => '0'),
-      //      'optional' => FALSE,
-      //    ),
-      //    array(
-      //      'name' => 'transaction',
-      //      'optional' => FALSE,
-      //      'source' => 'data',
-      //      'description' => 'The Payment Transaction data to be updated',
-      //      'type' => 'array',
-      //    ),
-      //  ),
-      //  'access callback' => '_payment_resource_access',
-      //  'access arguments' => array('update'),
-      //  'access arguments append' => TRUE,
-      //),
-    ),
-    //'product' => array(
-      //'retrieve' => array(
-      //  'help' => 'Retrieves a product from Drupal Commerce',
-      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/product_resource'
-      //  ),
-      //  'callback' => '_product_resource_retrieve',
-      //  'access callback' => '_product_resource_access',
-      //  'access arguments' => array('view'),
-      //  'access arguments append' => TRUE,
-      //  'args' => array(
-      //    array(
-      //      'name' => 'product_id',
-      //      'type' => 'int',
-      //      'description' => 'The Product Id',
-      //      'source' => array('path' => '0'),
-      //      'optional' => FALSE,
-      //    ),
-      //  ),
-      //),
-      //'create' => array(
-      //  'help' => 'Creates a new product for Drupal Commerce',
-      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/product_resource'),
-      //  'callback' => '_product_resource_create',
-      //  'args' => array(
-      //    array(
-      //      'name' => 'product',
-      //      'optional' => FALSE,
-      //      'source' => 'data',
-      //      'description' => 'The Product data to be created',
-      //      'type' => 'array',
-      //    ),
-      //  ),
-      //  'access callback' => '_product_resource_create',
-      //  'access arguments' => array('create'),
-      //  'access arguments append' => TRUE,
-      //),
-      //'update' => array(
-      //  'help' => 'Updates a Product in Drupal Commerce',
-      //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/product_resource'),
-      //  'callback' => '_product_resource_update',
-      //  'args' => array(
-      //    array(
-      //      'name' => 'product_id',
-      //      'type' => 'int',
-      //      'description' => 'The Product Id to get',
-      //      'source' => array('path' => '0'),
-      //      'optional' => FALSE,
-      //    ),
-      //    array(
-      //      'name' => 'product',
-      //      'optional' => FALSE,
-      //      'source' => 'data',
-      //      'description' => 'The product data to be updated',
-      //      'type' => 'array',
-      //    ),
-      //  ),
-      //  'access callback' => '_product_resource_access',
-      //  'access arguments' => array('update'),
-      //  'access arguments append' => TRUE,
-      //),
-    //),
+  	    ),
+  	  ),
+  	  //'update' => array(
+  	  //  'help' => 'Updates a Payment Transaction for an Order in Drupal Commerce',
+  	  //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/payment_resource'),
+  	  //  'callback' => '_payment_resource_update',
+  	  //  'args' => array(
+  	  //    array(
+  	  //      'name' => 'transaction_id',
+  	  //      'type' => 'int',
+  	  //      'description' => 'The Payment Transaction Id to get',
+  	  //      'source' => array('path' => '0'),
+  	  //      'optional' => FALSE,
+  	  //    ),
+  	  //    array(
+  	  //      'name' => 'transaction',
+  	  //      'optional' => FALSE,
+  	  //      'source' => 'data',
+  	  //      'description' => 'The Payment Transaction data to be updated',
+  	  //      'type' => 'array',
+  	  //    ),
+  	  //  ),
+  	  //  'access callback' => '_payment_resource_access',
+  	  //  'access arguments' => array('update'),
+  	  //  'access arguments append' => TRUE,
+  	  //),
+  	),
+  	//'product' => array(
+  	  //'retrieve' => array(
+  	  //  'help' => 'Retrieves a product from Drupal Commerce',
+  	  //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/product_resource'
+  	  //  ),
+  	  //  'callback' => '_product_resource_retrieve',
+  	  //  'access callback' => '_product_resource_access',
+  	  //  'access arguments' => array('view'),
+  	  //  'access arguments append' => TRUE,
+  	  //  'args' => array(
+  	  //    array(
+  	  //      'name' => 'product_id',
+  	  //      'type' => 'int',
+  	  //      'description' => 'The Product Id',
+  	  //      'source' => array('path' => '0'),
+  	  //      'optional' => FALSE,
+  	  //    ),
+  	  //  ),
+  	  //),
+  	  //'create' => array(
+  	  //  'help' => 'Creates a new product for Drupal Commerce',
+  	  //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/product_resource'),
+  	  //  'callback' => '_product_resource_create',
+  	  //  'args' => array(
+  	  //    array(
+  	  //      'name' => 'product',
+  	  //      'optional' => FALSE,
+  	  //      'source' => 'data',
+  	  //      'description' => 'The Product data to be created',
+  	  //      'type' => 'array',
+  	  //    ),
+  	  //  ),
+  	  //  'access callback' => '_product_resource_create',
+  	  //  'access arguments' => array('create'),
+  	  //  'access arguments append' => TRUE,
+  	  //),
+  	  //'update' => array(
+  	  //  'help' => 'Updates a Product in Drupal Commerce',
+  	  //  'file' => array('type' => 'inc', 'module' => 'commerce_services', 'name' => 'resources/product_resource'),
+  	  //  'callback' => '_product_resource_update',
+  	  //  'args' => array(
+  	  //    array(
+  	  //      'name' => 'product_id',
+  	  //      'type' => 'int',
+  	  //      'description' => 'The Product Id to get',
+  	  //      'source' => array('path' => '0'),
+  	  //      'optional' => FALSE,
+  	  //    ),
+  	  //    array(
+  	  //      'name' => 'product',
+  	  //      'optional' => FALSE,
+  	  //      'source' => 'data',
+  	  //      'description' => 'The product data to be updated',
+  	  //      'type' => 'array',
+  	  //    ),
+  	  //  ),
+  	  //  'access callback' => '_product_resource_access',
+  	  //  'access arguments' => array('update'),
+  	  //  'access arguments append' => TRUE,
+  	  //),
+  	//),
 		'commerce_system' => array(
   	  'actions' => array(
   	    'connect' => array(
@@ -436,7 +436,7 @@ function commerce_services_services_resources() {
   	      'callback' => '_commerce_services_session_destroy',
   	    ),
   	  ),
-    ),
+  	),
   );
 }
 

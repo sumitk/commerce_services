@@ -4,15 +4,6 @@
  * Creates a new Commerce Order with support for cascading entity creation of
  * associated Commerce Line Items.
  *
- * @param $values
- *   An array of values to merge into the new order object:
- *   - uid: the uid of the user who owns the order
- *   - status: the order status to initialize the new order to; defaults to the
- *     default status of the "In progress" order state
- *   - order_number: an alphanumeric order number; defaults to the order ID
- *   - mail: the primary contact e-mail for this order
- *   - hostname: the IP address of the customer who generated this order
- *   - data: an array of additional data to store with the order.
  * @param $product
  *   Array of Product id and quantities of first product of cart "product":{"id":"2","quantity":4}
  * @param $billing
@@ -38,7 +29,7 @@ function _commerce_services_order_create($product = array()) {
     $order = commerce_order_load($order_id);
     
     if (!empty($product['id'])) {
-      $line_item = commerce_cart_product_add_by_id($product['id'], $product['quantity'], FALSE, $user->uid);
+      $line_item = commerce_cart_product_add_by_id($product['id'], $product['quantity'], TRUE, $user->uid);
       return commerce_order_load($line_item->order_id);
     } else {
       return $order;
