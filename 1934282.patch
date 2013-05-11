@@ -1,0 +1,12 @@
+diff --git a/resources/cart.inc b/resources/cart.inc
+index 7a26c0c..8465a15 100644
+--- a/resources/cart.inc
++++ b/resources/cart.inc
+@@ -45,6 +45,7 @@ function commerce_services_cart_index_access() {
+  */
+ function commerce_services_cart_create($data, $flatten_fields) {
+   global $user;
++  $uid = !empty($user->uid) ? $user->uid : 0;
+ 
+   // Even though the data array could technically accept a uid value, since the
+   // resource is designed to work for the current API user this value will be

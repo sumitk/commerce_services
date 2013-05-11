@@ -1,7 +1,5 @@
 name = Commerce Services
-description = Provides integration with Services to create a Drupal Commerce API server.
+description = Defines Services resources for Drupal Commerce entities and systems.
 package = Services
-dependencies[] = ctools
-dependencies[] = services
+dependencies[] = entity
 core = 7.x
-php = 5.x
